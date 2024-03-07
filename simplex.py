@@ -53,57 +53,50 @@ def read_dades(num: int, prob: int):
             return np.array(cost), np.array(A), np.array(b), z, v
 c, A, b, z ,v = read_dades(1,2)
 
-def simplex(c, A, b, z, v):
-    m, n = A.shape
-    B = np.eye(m)
-    N = np.eye(n)
-    A = np.hstack((A, B))
-    c = np.hstack((c, np.zeros(m)))
-    c = -c
-    v = np.array(v)
-    while True:
-        B = np.eye(m)
-        N = np.eye(n)
-        A = np.hstack((A, B))
-        c = np.hstack((c, np.zeros(m)))
-        c = -c
-        v = np.array(v)
-        cN = c
-        cB = np.zeros(m)
-        A = np.hstack((A, B))
-        c = np.hstack((c, np.zeros(m)))
-        c = -c
-        v = np.array(v)
-        cN = c
-        cB = np.zeros(m)
-        while True:
-            cN = c[:n]
-            cB = c[n:]
-            B = A[:, n:]
-            N = A[:, :n]
-            Binv = np.linalg.inv(B)
-            y = cB @ Binv
-            cN = cN - y @ N
-            if np.all(cN <= 0):
-                break
-            k = np.argmax(cN)
-            d = Binv @ A[:, k]
-            if np.all(d <= 0):
-                return "El problema no tiene solución óptima"
-            theta = np.array([b[i] / d[i] if d[i] > 0 else np.inf for i in range(m)])
-            l = np.argmin(theta)
-            x = np.zeros(n)
-            x[k] = theta[l]
-            x = x @ Binv
-            x = np.hstack((x, np.zeros(m)))
-            A = A - np.outer(A[:, k], x)
-            c = c - c[k] * x
-            b = b - A[:, k] * x
-            z = z - c[k] * x
-            v = v - c[k] * x
-            if np.all(v >= 0):
-                return z, v
+def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, inversa = None):
+    m = len(b)
+    n = len(A[0])
+    print(m,n)
+    no_basiques = [a for a in range(m)]
+    basiques = [a for a in range(n) if a not in no_basiques]
 
+    while True:
+        B = A[:,basiques]
+        A_n = A[:,no_basiques]
+        B_inv = np.linalg.inv(B)
+        x = np.dot(B_inv, b)
+        cost_b = cost[basiques]
+        cost_n = cost[no_basiques]
+        z = np.dot(cost_b, x)
+        if min(x) < 0:
+            #print("No és SBF burru")
+            pass
+        elif min(x) == 0:
+            #print("Degenerat")
+            pass
+        # és optim?
+        # és el MÉS ÒPTIM?
+        r = cost_n - np.dot(np.dot(cost_b, B_inv),A_n)
+        if min(r) < 0:
+            #print("No és òptim burru")
+            pass
+        else:
+            return x, z
+        for e in range(len(r)):
+            if r[e] < 0:
+                break
+        entra = no_basiques[e]
+        # direcció bàsica factible
+        d_B = -np.dot(B_inv, A_n[e])
+        # longitud de pas
+        theta, marxa = min([((-x[i])/ d_i, i) for i, d_i in enumerate(d_B) ], key=lambda x: x[0])
+        marxa = basiques[marxa]
+        basiques[basiques.index(marxa)] = entra
+        no_basiques.remove(entra)
+        no_basiques.append(marxa)
+        no_basiques = sorted(no_basiques)
+        print(z, end="\r")
+    
 print(simplex(c, A, b, z, v))
 
 
