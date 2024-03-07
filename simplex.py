@@ -56,12 +56,10 @@ import time
 def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, inversa = None):
     m = len(b)
     n = len(A[0])
-    print(m,n)
     no_basiques = [a for a in range(n-m)]
     basiques = [a for a in range(n) if a not in no_basiques]
     basiques_noves = None
     while True:
-        time.sleep(1)
         if basiques_noves != None:
             basiques = basiques_noves
             no_basiques = [a for a in range(n) if a not in basiques]
@@ -74,8 +72,6 @@ def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, invers
         cost_n = cost[no_basiques]
         z = np.dot(cost_b, x)
         if min(x) < 0:
-            print(B)
-            print(x)
             print("No és SBF burru, fes Fase I")
             nova_A = np.hstack((A, np.eye(m))) # horizontal stack
             nou_cost = np.array([0 for _ in range(n)] + [1 for _ in range(m)])
@@ -92,6 +88,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, invers
             #print("No és òptim burru")
             pass
         else:
+            print("optim")
             return x, z
         for e in range(len(r)):
             if r[e] < 0:
@@ -100,13 +97,13 @@ def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, invers
         # direcció bàsica factible
         d_B = -np.dot(B_inv, A_n[:,e])
         # longitud de pas
-        theta, marxa = min([((-x[i])/ d_i, i) for i, d_i in enumerate(d_B) ], key=lambda x: x[0])
+        theta, marxa = min([((-x[i])/ d_i, i) for i, d_i in enumerate(d_B) if d_i < 0], key=lambda x: x[0])
         marxa = basiques[marxa]
         basiques[basiques.index(marxa)] = entra
         no_basiques.remove(entra)
         no_basiques.append(marxa)
         no_basiques = sorted(no_basiques)
-        print(z, end="\r")
+        print(z)
     
 print(simplex(c, A, b, z, v))
 
