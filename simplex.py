@@ -51,7 +51,7 @@ def read_dades(num: int, prob: int):
                 line = data.readline()
                 v = list(map(int, re.findall(r'-?\d+', line)))
             return np.array(cost), np.array(A), np.array(b), z, v
-c, A, b, z ,v = read_dades(1,2)
+c, A, b, z ,v = read_dades(1,1)
 import time
 def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, inversa = None):
     m = len(b)
@@ -61,7 +61,9 @@ def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, invers
     basiques_noves = None
     while True:
         if basiques_noves != None:
-            basiques = basiques_noves
+            print("oleole")
+            print(basiques_noves)
+            basiques = [a for a in range(n) if a in basiques_noves]
             no_basiques = [a for a in range(n) if a not in basiques]
             basiques_noves = None
         B = A[:,basiques]
@@ -75,8 +77,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, invers
             print("No és SBF burru, fes Fase I")
             nova_A = np.hstack((A, np.eye(m))) # horizontal stack
             nou_cost = np.array([0 for _ in range(n)] + [1 for _ in range(m)])
-            basiques_noves, _ = simplex(nou_cost, nova_A, b)
-            basiques_noves = np.nonzero(basiques_noves)
+            _, _, basiques_noves= simplex(nou_cost, nova_A, b)
             continue
         elif min(x) == 0:
             #print("Degenerat")
@@ -89,7 +90,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, invers
             pass
         else:
             print("optim")
-            return x, z
+            return x, z, basiques
         for e in range(len(r)):
             if r[e] < 0:
                 break
