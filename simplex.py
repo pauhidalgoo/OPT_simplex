@@ -1,6 +1,6 @@
 import numpy as np
 import re
-
+# hola
 def read_dades(num: int, prob: int):
     with open("OPT23-24_Datos práctica 1.txt", "r") as data:
         line = data.readline()
