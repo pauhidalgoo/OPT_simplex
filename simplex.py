@@ -106,7 +106,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, invers
         no_basiques = sorted(no_basiques)
         print(z)
     
-print(simplex(c, A, b, z, v))
+simplex(c, A, b, z, v)
 
 
 
