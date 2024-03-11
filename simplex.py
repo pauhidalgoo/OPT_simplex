@@ -2,7 +2,7 @@ import numpy as np
 import re
 # hola
 def read_dades(num: int, prob: int):
-    with open("OPT23-24_Datos práctica 1.txt", "r") as data:
+    with open("OPT_Simplex/OPT23-24_Datos práctica 1.txt", "r") as data:
         line = data.readline()
         while line != None:
             while not("datos"+ str(num) in line.replace(" ", "") and "problemaPL" + str(prob) in line.replace(" ", "")):
@@ -54,6 +54,7 @@ def read_dades(num: int, prob: int):
 c, A, b, z ,v = read_dades(1,1)
 import time
 def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, inversa = None):
+    z_original = z
     m = len(b)
     n = len(A[0])
     no_basiques = [a for a in range(n-m)]
@@ -77,7 +78,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, invers
             print("No és SBF burru, fes Fase I")
             nova_A = np.hstack((A, np.eye(m))) # horizontal stack
             nou_cost = np.array([0 for _ in range(n)] + [1 for _ in range(m)])
-            _, _, basiques_noves= simplex(nou_cost, nova_A, b)
+            _, _, basiques_noves, _ = simplex(nou_cost, nova_A, b)
             continue
         elif min(x) == 0:
             #print("Degenerat")
@@ -90,7 +91,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, invers
             pass
         else:
             print("optim")
-            return x, z, basiques
+            return x, z, basiques,z_original
         for e in range(len(r)):
             if r[e] < 0:
                 break
@@ -105,11 +106,31 @@ def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, invers
         no_basiques.append(marxa)
         no_basiques = sorted(no_basiques)
         print(z)
-    
-simplex(c, A, b, z, v)
 
+def print_simplex(simplex):
+    print("\n Solució: \n")
+    x, z, basiques, z_original = simplex
+    str_b = ""
+    for basica in basiques:
+        str_b +=str(basica) + " "
+    print("z* = ", z)
+    print("vb* =",str_b)
+    if z_original != None:
+        if float("%.4f" % z) == z_original:
+            print("La solució és òptima")
+            print("""        .
+       ,O,
+      ,OOO,
+'oooooOOOOOooooo'
+  `OOOOOOOOOOO`
+    `OOOOOOO`
+    OOOO'OOOO
+   OOO'   'OOO
+  O'         'O""")
+        else:
+            print("La solució no és òptima")
 
-
+print_simplex(simplex(c, A, b, z, v))
 
             
             
