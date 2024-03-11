@@ -51,7 +51,7 @@ def read_dades(num: int, prob: int):
                 line = data.readline()
                 v = list(map(int, re.findall(r'-?\d+', line)))
             return np.array(cost), np.array(A), np.array(b), z, v
-c, A, b, z ,v = read_dades(1,1)
+c, A, b, z ,v = read_dades(15,1)
 import time
 def simplex(cost: np.array, A: np.array, b: np.array, z = None, v = None, inversa = None):
     z_original = z
