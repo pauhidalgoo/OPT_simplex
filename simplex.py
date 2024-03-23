@@ -54,6 +54,7 @@ def read_dades(num: int, prob: int, fitxer: str = "OPT23-24_Datos práctica 1.tx
 import time
 def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = None):
     with open ("output.txt", "a") as doc:
+        iteracio = 0
         m = len(b)
         n = len(A[0])
         if(n < m):
@@ -65,13 +66,18 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
             doc.write("Fase 2\n")
             nova_A = np.hstack((A, np.eye(m))) # horizontal stack
             nou_cost = np.array([0 for _ in range(n)] + [1 for _ in range(m)])
-            x_f1, z_f1, basiques_noves, inv = simplex(nou_cost, nova_A, b, np.eye(m), fase1 = True)
+            x_f1, z_f1, basiques_noves, inv, iteracions = simplex(nou_cost, nova_A, b, np.eye(m), fase1 = True)
             inversa = inv
+            iteracio = iteracions + 1
             if z_f1 in [None, "Infactible", "No acotat"] or np.round(z_f1,10) > 0:
                     doc.write("No hi ha solucio factible\n\n")
-                    return None, "Infactible", [], None, None
+                    return None, "Infactible", [], None, iteracio
             if min(x_f1) == 0 and basiques_noves[np.argmin(x_f1)] >= n:
                 # Cas en el que fase I acaba amb degeneració en una de les variables artificials.
+                """
+                Una alternativa és buscar qualsevol no bàsica amb cost reduït 0 i l'element de la
+                qual en la fila de la variable artificial sigui diferent a 0.
+                """
                 marxa = basiques_noves[np.argmin(x_f1)]
                 basiques_per_iterar = [a for a in basiques if a not in basiques_noves]
                 for idx in basiques_per_iterar:
@@ -87,7 +93,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
                 else:
                     cost = np.append(cost, (np.zeros(m)))
                     z = np.dot(cost[basiques_noves], x_f1)
-                    return x_f1, z, basiques_noves, None
+                    return x_f1, z, basiques_noves, None, iteracio
             basiques = basiques_noves
             no_basiques = [a for a in range(n) if a not in basiques]
         else:
@@ -100,7 +106,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
         if m == n: # Si hi ha el mateix nombre de variables que restriccions, la SBF és la única
             x = np.dot(np.linalg.inv(A), b)
             z = np.dot(cost, x)
-            return x, z, basiques, None
+            return x, z, basiques, None, iteracio
         
         while True:
             degenerat = False
@@ -114,7 +120,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
                 degenerat = True
                 pass
             elif min(x) < 0:
-                return x, None, None, None
+                return x, None, None, None, iteracio
             
             # és optim?
             r = np.subtract(cost_n, np.dot(np.dot(cost_b, B_inv),A_n))
@@ -123,11 +129,13 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
             elif min(r) > 0:
                 doc.write("Solucio optima trobada\n\n") if fase1 != True else doc.write("SBF inicial trobada\n\n")
                 doc.write(f"x = {x}\nz* = {z}\nbasiques = {basiques}\n\n") if fase1 != True else doc.write(f"basiques = {basiques}\n\n")
-                return x, z, basiques, inversa
+                doc.write(f"Nombre d'iteracions: {iteracio + 1}\n\n")
+                return x, z, basiques, inversa, iteracio
             else:
                 doc.write("Una de les solucions òptimes trobada\n\n") if fase1 != True else doc.write("SBF inicial trobada\n\n")
                 doc.write(f"x = {x}\nz* = {z}\nbasiques = {basiques}\n\n") if fase1 != True else doc.write(f"basiques = {basiques}\n\n")
-                return x, z, basiques, inversa
+                doc.write(f"Nombre d'iteracions: {iteracio + 1}\n\n")
+                return x, z, basiques, inversa, iteracio
             for e in range(len(r)):
                 if r[e] < 0:
                     break
@@ -137,11 +145,18 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
 
             if min(d_B) >= 0:
                 doc.write("Optim no acotat (raig)\n\n")
-                return x, "No acotat", basiques, inversa
+                doc.write(f"basiques = {basiques}\n\n")
+                doc.write(f"Nombre d'iteracions: {iteracio + 1}\n\n")
+                return x, "No acotat", basiques, inversa, iteracio
             # longitud de pas
-            theta, p = min([(np.divide((-x[i]),d_i), i) for i, d_i in enumerate(d_B) if d_i < 0])
+            theta, marxa = min([(np.divide((-x[i]),d_i), basiques[i]) for i, d_i in enumerate(d_B) if d_i < 0])
 
             if degenerat and theta == 0:
+                """
+                Aquest condicional està per la propietat ii de la diapositiva 30.
+                No vam acabar d'entendre exactament en quins casos es donava aquest
+                problema
+                """
                 if max([np.divide((-x[i]),d_i) for i, d_i in enumerate(d_B) if d_i < 0]) == 0:
                     # No hi ha cap theta > 0 (lo de la presentació?)
                     # return x, "Infactible", basiques, None
@@ -150,7 +165,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
                     pass
                     
 
-            marxa = basiques[p]
+            p = basiques.index(marxa)
             basiques[p] = entra
             no_basiques = [a for a in range(n) if a not in basiques] # Ordenades
             doc.write(f"iout: {entra}, q = {p}, theta = {theta}, z = {z}\n")
@@ -164,6 +179,8 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
             x[p] = theta
 
             z += np.dot(r[e],theta)
+            iteracio += 1
+
 for alumne in range(1, 67):
     for problema in range(1, 5):
         print(f"Alumne {alumne}, problema {problema}")
@@ -176,7 +193,9 @@ for alumne in range(1, 67):
             print(result, f"{a[1]:.4f}")
         else:
             print(a[1])
+        print(f"Iteracions: {a[4]}")
 
+"""
 print("------------- \n Test \n --------------")
 for alumne in range(67, 71):
     for problema in range(1, 5):
@@ -186,3 +205,26 @@ for alumne in range(67, 71):
             doc.write(f"Alumne {alumne}, problema {problema}\n")
         a = simplex(c, A, b, None)
         print(a[1])
+
+Per comprovar:
+
+from scipy.optimize import linprog
+r = linprog(c, A_eq = A, b_eq = b, method='highs')
+if r['status']==0:
+    if a[1] != None and a[1] != "?":
+        print(f"{r['fun']:.4f}", f"{a[1]:.4f}")
+    else:
+        print("a was none and r was ", r['fun'])
+elif r['status'] == 2:
+    print("infactible")
+    if a[1] == "Infactible":
+        print(True)
+    else:
+        print(False)
+elif r['status'] == 3:
+    print("raig")
+    if a[1] == "No acotat":
+        print(True)
+    else:
+        print(False)
+"""
