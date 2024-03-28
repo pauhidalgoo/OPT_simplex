@@ -63,7 +63,6 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
         basiques = [a for a in range(n) if a not in no_basiques]
         basiques_noves = None
         if fase1 == None:
-            doc.write("Fase 2\n")
             nova_A = np.hstack((A, np.eye(m))) # horizontal stack
             nou_cost = np.array([0 for _ in range(n)] + [1 for _ in range(m)])
             x_f1, z_f1, basiques_noves, inv, iteracions = simplex(nou_cost, nova_A, b, np.eye(m), fase1 = True)
@@ -91,11 +90,15 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
                     except:
                         continue
                 else:
+                    doc.write("SBF inicial contenia una variable artificial que no s'ha pogut treure.\n")
                     cost = np.append(cost, (np.zeros(m)))
                     z = np.dot(cost[basiques_noves], x_f1)
+                    doc.write(f"x = {x_f1}\nz* = {z}\nbasiques = {basiques_noves}\n\n")
                     return x_f1, z, basiques_noves, None, iteracio
             basiques = basiques_noves
             no_basiques = [a for a in range(n) if a not in basiques]
+            doc.write("SBF inicial trobada.\n\n")
+            doc.write("Fase 2\n")
         else:
             doc.write("Fase 1\n")
         cost_b = cost[basiques]
@@ -115,8 +118,8 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
             B_inv = inversa
             cost_b = cost[basiques]
             cost_n = cost[no_basiques]
-            if min(x) == 0:
-                doc.write("Solucio degenerada\n\n")
+            if np.round(min(x),10) == 0:
+                doc.write("Solucio degenerada\n")
                 degenerat = True
                 pass
             elif min(x) < 0:
@@ -127,13 +130,13 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
             if min(r) < 0:
                 pass
             elif min(r) > 0:
-                doc.write("Solucio optima trobada\n\n") if fase1 != True else doc.write("SBF inicial trobada\n\n")
-                doc.write(f"x = {x}\nz* = {z}\nbasiques = {basiques}\n\n") if fase1 != True else doc.write(f"basiques = {basiques}\n\n")
+                doc.write("Solucio optima trobada\n\n") if fase1 != True else doc.write("Fi Fase I\n\n")
+                doc.write(f"x = {x}\nz* = {z}\nbasiques = {basiques}\nr = {r}\n\n") if fase1 != True else doc.write(f"basiques = {basiques}\n\n")
                 doc.write(f"Nombre d'iteracions: {iteracio + 1}\n\n")
                 return x, z, basiques, inversa, iteracio
             else:
-                doc.write("Una de les solucions òptimes trobada\n\n") if fase1 != True else doc.write("SBF inicial trobada\n\n")
-                doc.write(f"x = {x}\nz* = {z}\nbasiques = {basiques}\n\n") if fase1 != True else doc.write(f"basiques = {basiques}\n\n")
+                doc.write("Una de les solucions optimes trobada\n\n") if fase1 != True else doc.write("Fi Fase I\n\n")
+                doc.write(f"x = {x}\nz* = {z}\nbasiques = {basiques}\nr = {r}\n\n") if fase1 != True else doc.write(f"basiques = {basiques}\n\n")
                 doc.write(f"Nombre d'iteracions: {iteracio + 1}\n\n")
                 return x, z, basiques, inversa, iteracio
             for e in range(len(r)):
@@ -145,7 +148,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
 
             if min(d_B) >= 0:
                 doc.write("Optim no acotat (raig)\n\n")
-                doc.write(f"basiques = {basiques}\n\n")
+                doc.write(f"basiques = {basiques}\ndB = {d_B}\n\n")
                 doc.write(f"Nombre d'iteracions: {iteracio + 1}\n\n")
                 return x, "No acotat", basiques, inversa, iteracio
             # longitud de pas
@@ -168,7 +171,7 @@ def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = No
             p = basiques.index(marxa)
             basiques[p] = entra
             no_basiques = [a for a in range(n) if a not in basiques] # Ordenades
-            doc.write(f"iout: {entra}, q = {p}, theta = {theta}, z = {z}\n")
+            doc.write(f"q = {entra}, out = {marxa}, p = {p}, theta = {theta}, z = {z}\n")
             
             # actualitzacions
             transformacio = np.eye(m)
@@ -195,8 +198,12 @@ for alumne in range(1, 67):
             print(a[1])
         print(f"Iteracions: {a[4]}")
 
-"""
+
 print("------------- \n Test \n --------------")
+with open ("output.txt", "a") as doc:
+    doc.write("------------------------------------------------------------------------------\n")
+    doc.write("                                 Test\n")
+    doc.write("------------------------------------------------------------------------------\n\n")
 for alumne in range(67, 71):
     for problema in range(1, 5):
         print(f"Alumne {alumne}, problema {problema}")
@@ -205,7 +212,7 @@ for alumne in range(67, 71):
             doc.write(f"Alumne {alumne}, problema {problema}\n")
         a = simplex(c, A, b, None)
         print(a[1])
-
+"""
 Per comprovar:
 
 from scipy.optimize import linprog
