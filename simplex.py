@@ -1,7 +1,23 @@
 import numpy as np
 import re
+from typing import Optional
 
 def read_dades(num: int, prob: int, fitxer: str = "OPT23-24_Datos práctica 1.txt"):
+    """
+    Read data from a file and extract relevant information.
+
+    Args:
+    - fitxer (str): Path to the file to read from.
+    - num (int): Number used to identify student data.
+    - prob (int): Number used to identify problem number.
+
+    Returns:
+    - cost (numpy.ndarray): Cost coefficients for the linear program objective function.
+    - A (numpy.ndarray): Coefficients of the constraints matrix.
+    - b (numpy.ndarray): Values of the constraints.
+    - z (float or None): Objective function value.
+    - v (list or None): List of basis indices.
+    """
     with open(fitxer, "r") as data:
         line = data.readline()
         while line != None:
@@ -51,8 +67,24 @@ def read_dades(num: int, prob: int, fitxer: str = "OPT23-24_Datos práctica 1.tx
                 v = list(map(int, re.findall(r'-?\d+', line)))
             return np.array(cost), np.array(A), np.array(b), z, v
 
-import time
-def simplex(cost: np.array, A: np.array, b: np.array, inversa = None, fase1 = None):
+def simplex(cost: np.array, A: np.array, b: np.array, inversa: Optional[np.array] = None, fase1: bool = None):
+    """
+    Performs the simplex algorithm.
+
+    Args:
+    - cost (numpy.ndarray): Cost coefficients for the linear program objective function.
+    - A (numpy.ndarray): Coefficients of the constraints matrix.
+    - b (numpy.ndarray): Values of the constraints.
+    - inversa (numpy.ndarray, optional): Inverse matrix. Defaults to None.
+    - fase1 (bool, optional): Indicates if it's the first phase of the simplex algorithm. Defaults to None.
+
+    Returns:
+    - x (numpy.ndarray or None): Solution vector.
+    - z (float or str or None): Objective function value. None if infactible, No acotat if unbounded.
+    - basiques (list): Basic variables.
+    - inversa (numpy.ndarray or None): Inverse matrix.
+    - iteracio (int): Number of iterations.
+    """
     with open ("output.txt", "a") as doc:
         iteracio = 0
         m = len(b)
